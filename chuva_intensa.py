@@ -12,6 +12,7 @@ from cartopy.mpl.gridliner import LATITUDE_FORMATTER, LONGITUDE_FORMATTER
 import matplotlib.offsetbox as offsetbox
 import json
 import os
+from scipy.ndimage import gaussian_filter
 
 
 data_atual_base = datetime.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
@@ -26,7 +27,7 @@ descricoes_niveis = ["Nivel 0", "Nivel 1", "Nivel 2", "Nivel 3", "Nivel 4"]
 cores = [(0.6, 1.0, 0.6), 'yellow', 'orange', 'red', 'purple' ]
 titulos_niveis = ['Tempestades', 'Baixo', 'Moderado', 'Alto', 'Muito Alto']
 
-# --- FunÁ„o para Plotagem e Salvamento ---
+# --- Fun√ß√£o para Plotagem e Salvamento ---
 def salvar_previsao(resultados, d_ini, d_fim, lats, lons, sufixo):
     print(f"Gerando mapa para: {sufixo} ({d_ini.strftime('%d/%m')} - {d_fim.strftime('%d/%m')})")
     
@@ -37,10 +38,11 @@ def salvar_previsao(resultados, d_ini, d_fim, lats, lons, sufixo):
     # 1. Plotar Riscos
     for idx, res in enumerate(resultados):
         if res is not None and np.any(res > 0):
-           ax.contourf(lons, lats, res, colors=[cores[idx]], levels=[0.5, 1.5], transform=ccrs.PlateCarree(), zorder=5)
+        res_suave = gaussian_filter(res.astype(float), sigma=5.0)
+           ax.contourf(lons, lats, res_suave, colors=[cores[idx]], levels=[0.1, 1.5], transform=ccrs.PlateCarree(), zorder=5)
 
 
-    # 2. Base Geogr·fica
+    # 2. Base Geogr√°fica
     gdf = gpd.read_file(shape_path)
     brasil = gdf[gdf['ADMIN'] == 'Brazil']
     sul_sem_br = gdf[(gdf['CONTINENT'] == 'South America') & (gdf['ADMIN'] != 'Brazil')]
@@ -54,7 +56,7 @@ def salvar_previsao(resultados, d_ini, d_fim, lats, lons, sufixo):
     ax.add_feature(cfeature.BORDERS.with_scale('10m'), edgecolor='k', linewidth=0.5, zorder=7)
     ax.add_feature(cfeature.STATES.with_scale('10m'), edgecolor='k', linewidth=0.5, zorder=7)
 
-    # 3. TÌtulo e Grades
+    # 3. T√≠tulo e Grades
     ax.set_title(f'Risco para Eventos de Chuva Intensa\nValidade: {d_ini.strftime("%Y-%m-%d 12:00 UTC")} a {d_fim.strftime("%Y-%m-%d 12:00 UTC")}', fontweight='bold')
     gl = ax.gridlines(draw_labels=True, linestyle='--', color='gray', linewidth=0.25, zorder=8)
     gl.top_labels = gl.right_labels = False
@@ -117,7 +119,7 @@ for fcast_hour in range(12, 61):
 
         ur = (ur850 + ur700 + ur500) / 3
 
-        # LÛgica de NÌveis
+        # L√≥gica de N√≠veis
         condicoes = [
             ((lifted <= -1) & (mucape >= 250)) | ((omeg_500 <= - 0.1) & (aprec >= 30) & (ur >= 75)),
             ((lifted <= -2) & (aprec >= 40) & (mucape >= 1000) & (ur >= 65) & (prc >= 2)) | ((omeg_500 <= - 0.3) & (aprec >= 45) & (ur >= 80)),

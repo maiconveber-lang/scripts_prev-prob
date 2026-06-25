@@ -38,7 +38,7 @@ def salvar_previsao(resultados, d_ini, d_fim, lats, lons, sufixo):
     # 1. Plotar Riscos
     for idx, res in enumerate(resultados):
         if res is not None and np.any(res > 0):
-        res_suave = gaussian_filter(res.astype(float), sigma=5.0)
+           res_suave = gaussian_filter(res.astype(float), sigma=5.0)
            ax.contourf(lons, lats, res_suave, colors=[cores[idx]], levels=[0.1, 1.5], transform=ccrs.PlateCarree(), zorder=5)
 
 

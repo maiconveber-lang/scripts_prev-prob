@@ -41,7 +41,6 @@ def salvar_previsao(resultados, d_ini, d_fim, lats, lons, sufixo):
            res_suave = gaussian_filter(res.astype(float), sigma=5.0)
            ax.contourf(lons, lats, res_suave, colors=[cores[idx]], levels=[0.1, 1.5], transform=ccrs.PlateCarree(), zorder=5)
 
-
     # 2. Base Geográfica
     gdf = gpd.read_file(shape_path)
     brasil = gdf[gdf['ADMIN'] == 'Brazil']
